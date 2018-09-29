@@ -4,7 +4,7 @@
 使用步骤
 
 1. git clone 本仓库
-2. 选择合适的分支版本
+2. **选择合适的分支版本**
 3. 本地安装，或者打包上传到仓库、然后本地pom引入
 4. classpath路径下需要加入文件easyRpc.properties，并加入属性：
     rpc.zk.connectString=192.168.0.113:2181和rpc.port=5577作为zk的地址，和Rpc服务启动的端口，当然值需要填写真实值。
@@ -13,3 +13,40 @@
 7. 最后调用就如同本地方法调用一样。
 
 
+```
+public interface PersonIntf {
+
+    String getName();
+}
+@Component
+@Implement(contract = PersonIntf.class, implCode = "zhangsan")
+public class PersonImpl implements PersonIntf {
+
+    @Override
+    public String getName() {
+        return "张三";
+    }
+}
+
+@RestController
+public class DemoController {
+
+    @Reference(contract = PersonIntf.class, implCode = "zhangsan")
+    private PersonIntf personIntf;
+
+    @RequestMapping(path = "f1")
+    public String f1() {
+        return personIntf.getName();
+    }
+}
+
+@SpringBootApplication
+@Slf4j
+@ComponentScan(basePackages = "com")
+public class Boot {
+
+    public static void main(String[] args) {
+        SpringApplication.run(Boot.class, args);
+    }
+}
+```
