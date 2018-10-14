@@ -10,6 +10,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 
 import java.net.BindException;
 
@@ -30,7 +31,8 @@ public class NettyServer {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new MessageEncoder(), new MessageDecoder(), channelInboundHandler);
+                        ch.pipeline().addLast(new IdleStateHandler(30, 0, 0),
+                                new MessageEncoder(), new MessageDecoder(), channelInboundHandler);
                     }
                 });
         while (true) {

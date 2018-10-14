@@ -1,5 +1,6 @@
 package com.easyrpc.client;
 
+import com.easyrpc.protocol.InvocationMsg;
 import com.easyrpc.protocol.Request;
 import com.easyrpc.register.ZookeeperCoordinator;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ServerClient {
 
-    private static ConcurrentHashMap<String, ClientMsgHandler> IP_MSG_MAP = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, NettyChannel> IP_CHANNEL_MAP = new ConcurrentHashMap<>();
 
     public static Object invoke(String contract, String implCode, String method, Object[] args, Class<?>[] parameterTypes) {
         Request request = new Request();
@@ -32,30 +33,34 @@ public class ServerClient {
         request.setParameterTypes(parameterTypes);
         request.setId(UUID.randomUUID().toString());
         String path = "/" + contract + "/" + implCode;
-
         List<String> list = ZookeeperCoordinator.getInstance().getChildrenList(path);
         String server = list.get(RandomUtils.nextInt(0, list.size()));
-        ClientMsgHandler clientMsgHandler = null;
-        if ((clientMsgHandler = IP_MSG_MAP.get(server)) == null) {
-            synchronized (IP_MSG_MAP) {
-                if ((clientMsgHandler = IP_MSG_MAP.get(server)) == null) {
+        return send(server, request).get().toResponse().getResp();
+    }
+
+
+    private static Future<InvocationMsg> send(String server, Request request) {
+        log.info("发送消息：{}", request);
+        InvocationMsg invocationMsg = InvocationMsg.from(request);
+        InvocationMsgFuture invocationMsgFuture = new InvocationMsgFuture();
+        MsgFutreManager.save(request.getId(), invocationMsgFuture);
+        getChannel(server).send(invocationMsg);
+        return invocationMsgFuture;
+    }
+
+    private static NettyChannel getChannel(String server) {
+        NettyChannel nettyChannel;
+        if ((nettyChannel = IP_CHANNEL_MAP.get(server)) == null) {
+            synchronized (IP_CHANNEL_MAP) {
+                if ((nettyChannel = IP_CHANNEL_MAP.get(server)) == null) {
                     String[] ipAndPort = StringUtils.split(server, "@");
-                    clientMsgHandler = NettyClient.init(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
-                    IP_MSG_MAP.put(server, clientMsgHandler);
+                    nettyChannel = new NettyChannel(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
+                    IP_CHANNEL_MAP.put(server, nettyChannel);
                 }
             }
         }
-        return clientMsgHandler.send(request).get().toResponse().getResp();
+        return nettyChannel;
     }
 
-
-    private void listener(String path) {
-        ZookeeperCoordinator.getInstance().listenPath(path, new TreeCacheListener() {
-            @Override
-            public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
-                    event.getData().getPath();
-            }
-        });
-    }
 
 }
