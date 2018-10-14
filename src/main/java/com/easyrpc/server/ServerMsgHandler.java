@@ -7,6 +7,7 @@ import com.easyrpc.register.ImplementKey;
 import com.easyrpc.register.ServerRegister;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
@@ -32,5 +33,15 @@ public class ServerMsgHandler extends SimpleChannelInboundHandler<InvocationMsg>
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         log.error("", cause);
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            log.info("通道空闲，即将关闭");
+            ctx.channel().close();
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
     }
 }
