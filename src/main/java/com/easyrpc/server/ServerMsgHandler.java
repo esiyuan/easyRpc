@@ -5,6 +5,7 @@ import com.easyrpc.protocol.InvocationMsg;
 import com.easyrpc.protocol.Response;
 import com.easyrpc.register.ImplementKey;
 import com.easyrpc.register.ServerRegister;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleStateEvent;
@@ -17,6 +18,7 @@ import org.apache.commons.lang3.reflect.MethodUtils;
  * @author: guanjie
  */
 @Slf4j
+@ChannelHandler.Sharable
 public class ServerMsgHandler extends SimpleChannelInboundHandler<InvocationMsg> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, InvocationMsg msg) throws Exception {
