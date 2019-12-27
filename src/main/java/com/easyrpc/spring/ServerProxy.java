@@ -17,8 +17,11 @@ public class ServerProxy implements InvocationHandler {
 
     private Field field;
 
-    public ServerProxy(Field field) {
+    private ServerClient serverClient;
+
+    public ServerProxy(Field field, ServerClient serverClient) {
         this.field = field;
+        this.serverClient = serverClient;
     }
 
     @Override
@@ -31,11 +34,11 @@ public class ServerProxy implements InvocationHandler {
             }
         }
         Reference reference = AnnotationUtils.findAnnotation(field, Reference.class);
-        return ServerClient.invoke(reference.contract().getName(), reference.implCode(), method.getName(), args, types);
+        return serverClient.invoke(reference.contract().getName(), reference.implCode(), method.getName(), args, types);
     }
 
 
-    public static <T> T getProxy(Field field) {
-        return (T) Proxy.newProxyInstance(ServerProxy.class.getClassLoader(), new Class[]{field.getType()}, new ServerProxy(field));
+    public static <T> T getProxy(Field field, ServerClient serverClient) {
+        return (T) Proxy.newProxyInstance(ServerProxy.class.getClassLoader(), new Class[]{field.getType()}, new ServerProxy(field, serverClient));
     }
 }

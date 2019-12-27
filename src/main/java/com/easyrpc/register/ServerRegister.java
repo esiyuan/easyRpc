@@ -7,6 +7,7 @@ import com.easyrpc.util.EasyRpcPropertiesUtil;
 import com.easyrpc.util.IpOrPidUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopProxyUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -26,8 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerRegister implements ApplicationListener<ContextRefreshedEvent> {
 
     private int port = EasyRpcPropertiesUtil.getInt("rpc.port");
-
-    private ZookeeperCoordinator zookeeperCoordinator = ZookeeperCoordinator.getInstance();
+    @Autowired
+    private ZookeeperCoordinator zookeeperCoordinator;
 
     private static Map<ImplementKey, Object> IMPLEMENT_CACHE = new ConcurrentHashMap<>();
 

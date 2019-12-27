@@ -1,6 +1,5 @@
 package com.easyrpc.register;
 
-import com.easyrpc.util.EasyRpcPropertiesUtil;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -12,7 +11,10 @@ import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,21 +24,22 @@ import java.util.List;
  * @author: guanjie
  */
 @Slf4j
+@Component
 public class ZookeeperCoordinator {
 
     private CuratorFramework client;
 
-    private static ZookeeperCoordinator INSTANCE;
+    private ZookeeperCoordinator instance;
+    @Value("${rpc.zk.connectString}")
+    private String connectionStr;
 
-    static {
-        INSTANCE = new ZookeeperCoordinator.Builder()
-                .connectString(EasyRpcPropertiesUtil.getString("rpc.zk.connectString"))
+    @PostConstruct
+    public void init() {
+        instance = new ZookeeperCoordinator.Builder()
+                .connectString(connectionStr)
                 .namespace("easyRpc")
                 .sessionTimeoutMs(1000).connectionTimeoutMs(1000).retryPolicy(new ExponentialBackoffRetry(1000, 3)).build();
-    }
 
-    public static ZookeeperCoordinator getInstance() {
-        return INSTANCE;
     }
 
     private ZookeeperCoordinator(CuratorFramework client) {
