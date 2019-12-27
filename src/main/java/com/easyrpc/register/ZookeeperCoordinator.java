@@ -29,23 +29,19 @@ public class ZookeeperCoordinator {
 
     private CuratorFramework client;
 
-    private ZookeeperCoordinator instance;
     @Value("${rpc.zk.connectString}")
     private String connectionStr;
 
     @PostConstruct
     public void init() {
-        instance = new ZookeeperCoordinator.Builder()
+        client = new ZookeeperCoordinator.Builder()
                 .connectString(connectionStr)
                 .namespace("easyRpc")
                 .sessionTimeoutMs(1000).connectionTimeoutMs(1000).retryPolicy(new ExponentialBackoffRetry(1000, 3)).build();
-
-    }
-
-    private ZookeeperCoordinator(CuratorFramework client) {
-        this.client = client;
         client.start();
+
     }
+
 
     public static class Builder {
         CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder();
@@ -75,8 +71,8 @@ public class ZookeeperCoordinator {
             return this;
         }
 
-        public ZookeeperCoordinator build() {
-            return new ZookeeperCoordinator(builder.build());
+        public CuratorFramework build() {
+            return builder.build();
         }
 
     }
